@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider     = "mysql"
+  relationMode = "prisma"
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Char(36)
+  phoneNumber  String   @unique(map: "IX_Users_PhoneNumber") @db.VarChar(20)
+  passwordHash String   @db.VarChar(255)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+/// Bảng lịch sử migration của hệ thống .NET/EF Core cũ — giữ nguyên, không dùng trong app
+/// Next.js này, chỉ khai báo để Prisma Migrate không đề xuất xóa bảng khi diff schema.
+model CustomersEfMigrationsHistory {
+  migrationId    String @id @map("MigrationId") @db.VarChar(150)
+  productVersion String @map("ProductVersion") @db.VarChar(32)
+
+  @@map("__customers__efmigrationshistory")
+}
+
+/// Xem ghi chú tại CustomersEfMigrationsHistory ở trên.
+model ProductsEfMigrationsHistory {
+  migrationId    String @id @map("MigrationId") @db.VarChar(150)
+  productVersion String @map("ProductVersion") @db.VarChar(32)
+
+  @@map("__products__efmigrationshistory")
+}
+
+/// Cấu hình dạng key-value (giá điện, thông tin xuất hóa đơn) — xem SRS mục 3.2.6
+model Config {
+  id             String    @id @default(uuid()) @map("Id") @db.Char(36)
+  key            String    @unique(map: "IX_Configs_Key") @map("Key") @db.VarChar(255)
+  value          String    @map("Value") @db.LongText
+  createdAt      DateTime? @map("CreatedAt") @db.DateTime(6)
+  createdBy      String    @default("00000000-0000-0000-0000-000000000000") @map("CreatedBy") @db.Char(36)
+  lastModified   DateTime? @map("LastModified") @db.DateTime(6)
+  lastModifiedBy String    @default("00000000-0000-0000-0000-000000000000") @map("LastModifiedBy") @db.Char(36)
+
+  @@map("configs")
+}
+
+model Customer {
+  id             String    @id @default(uuid()) @map("Id") @db.Char(36)
+  name           String    @map("Name") @db.LongText
+  description    String?   @map("Description") @db.LongText
+  phone          String    @map("Phone") @db.LongText
+  createdAt      DateTime? @map("CreatedAt") @db.DateTime(6)
+  createdBy      String    @default("00000000-0000-0000-0000-000000000000") @map("CreatedBy") @db.Char(36)
+  lastModified   DateTime? @map("LastModified") @db.DateTime(6)
+  lastModifiedBy String    @default("00000000-0000-0000-0000-000000000000") @map("LastModifiedBy") @db.Char(36)
+  isDeleted      Boolean   @default(false) @map("IsDeleted")
+  isHasZalo      Boolean   @default(false) @map("IsHasZalo")
+  code           Int       @unique(map: "IX_Customers_Code") @default(autoincrement()) @map("Code")
+
+  meters   ElectricityMeter[]
+  invoices Invoice[]
+
+  @@index([isDeleted], map: "IX_Customers_IsDeleted")
+  @@map("customers")
+}
+
+model ElectricityMeter {
+  id                   String    @id @default(uuid()) @map("Id") @db.Char(36)
+  name                 String    @map("Name") @db.LongText
+  transformerStationId String    @map("TransformerStationId") @db.Char(36)
+  customerId           String    @map("CustomerId") @db.Char(36)
+  startNum             BigInt    @map("StartNum")
+  endNum               BigInt    @map("EndNum")
+  isDeleted            Boolean   @default(false) @map("IsDeleted")
+  createdAt            DateTime? @map("CreatedAt") @db.DateTime(6)
+  createdBy            String    @default("00000000-0000-0000-0000-000000000000") @map("CreatedBy") @db.Char(36)
+  lastModified         DateTime? @map("LastModified") @db.DateTime(6)
+  lastModifiedBy       String    @default("00000000-0000-0000-0000-000000000000") @map("LastModifiedBy") @db.Char(36)
+  description          String?   @map("Description") @db.LongText
+  code                 Int       @unique(map: "IX_ElectricityMeters_Code") @default(autoincrement()) @map("Code")
+
+  customer           Customer           @relation(fields: [customerId], references: [id])
+  transformerStation TransformerStation @relation(fields: [transformerStationId], references: [id])
+  invoiceDetails     InvoiceDetail[]
+
+  @@index([isDeleted], map: "IX_ElectricityMeters_IsDeleted")
+  @@index([customerId], map: "IX_ElectricityMeters_CustomerId")
+  @@index([transformerStationId], map: "IX_ElectricityMeters_TransformerStationId")
+  @@map("electricitymeters")
+}
+
+model InvoiceDetail {
+  id                 String    @id @default(uuid()) @map("Id") @db.Char(36)
+  electricityMeterId String    @map("ElectricityMeterId") @db.Char(36)
+  unitPrice          Float     @map("UnitPrice")
+  createdAt          DateTime? @map("CreatedAt") @db.DateTime(6)
+  createdBy          String    @default("00000000-0000-0000-0000-000000000000") @map("CreatedBy") @db.Char(36)
+  lastModified       DateTime? @map("LastModified") @db.DateTime(6)
+  lastModifiedBy     String    @default("00000000-0000-0000-0000-000000000000") @map("LastModifiedBy") @db.Char(36)
+  invoiceId          String    @map("InvoiceId") @db.Char(36)
+  endNum             BigInt    @default(0) @map("EndNum")
+  startNum           BigInt    @default(0) @map("StartNum")
+  isDeleted          Boolean   @default(false) @map("IsDeleted")
+
+  invoice          Invoice          @relation(fields: [invoiceId], references: [id])
+  electricityMeter ElectricityMeter @relation(fields: [electricityMeterId], references: [id])
+
+  @@index([invoiceId], map: "IX_InvoiceDetails_InvoiceId")
+  @@index([electricityMeterId], map: "IX_InvoiceDetails_ElectricityMeterId")
+  @@index([isDeleted], map: "IX_InvoiceDetails_IsDeleted")
+  @@map("invoicedetails")
+}
+
+/// Trạng thái thanh toán — xem SRS BR-3: 0 = Chưa thanh toán, 1 = Đã thanh toán, 2 = Thanh toán một phần
+model Invoice {
+  id              String    @id @default(uuid()) @map("Id") @db.Char(36)
+  month           String    @map("Month") @db.VarChar(7)
+  customerId      String    @map("CustomerId") @db.Char(36)
+  totalAmountPaid Float     @default(0) @map("TotalAmountPaid")
+  status          Int       @default(0) @map("Status")
+  code            Int       @unique(map: "IX_Invoices_Code") @default(autoincrement()) @map("Code")
+  note            String?   @map("Note") @db.LongText
+  isDeleted       Boolean   @default(false) @map("IsDeleted")
+  createdAt       DateTime? @map("CreatedAt") @db.DateTime(6)
+  createdBy       String    @default("00000000-0000-0000-0000-000000000000") @map("CreatedBy") @db.Char(36)
+  lastModified    DateTime? @map("LastModified") @db.DateTime(6)
+  lastModifiedBy  String    @default("00000000-0000-0000-0000-000000000000") @map("LastModifiedBy") @db.Char(36)
+
+  customer Customer        @relation(fields: [customerId], references: [id])
+  details  InvoiceDetail[]
+
+  @@index([customerId], map: "IX_Invoices_CustomerId")
+  @@index([month], map: "IX_Invoices_Month")
+  @@index([status], map: "IX_Invoices_Status")
+  @@index([isDeleted], map: "IX_Invoices_IsDeleted")
+  @@map("invoices")
+}
+
+/// Mẫu HTML dùng khi xuất hóa đơn — xem SRS mục 3.2.7
+model Template {
+  id             String    @id @default(uuid()) @map("Id") @db.Char(36)
+  key            String    @unique(map: "IX_Templates_Key") @map("Key") @db.VarChar(255)
+  value          String    @map("Value") @db.LongText
+  createdAt      DateTime? @map("CreatedAt") @db.DateTime(6)
+  createdBy      String    @default("00000000-0000-0000-0000-000000000000") @map("CreatedBy") @db.Char(36)
+  lastModified   DateTime? @map("LastModified") @db.DateTime(6)
+  lastModifiedBy String    @default("00000000-0000-0000-0000-000000000000") @map("LastModifiedBy") @db.Char(36)
+
+  @@map("templates")
+}
+
+model TransformerStation {
+  id             String    @id @default(uuid()) @map("Id") @db.Char(36)
+  name           String    @map("Name") @db.LongText
+  isDeleted      Boolean   @default(false) @map("IsDeleted")
+  createdAt      DateTime? @map("CreatedAt") @db.DateTime(6)
+  createdBy      String    @default("00000000-0000-0000-0000-000000000000") @map("CreatedBy") @db.Char(36)
+  lastModified   DateTime? @map("LastModified") @db.DateTime(6)
+  lastModifiedBy String    @default("00000000-0000-0000-0000-000000000000") @map("LastModifiedBy") @db.Char(36)
+  description    String?   @map("Description") @db.LongText
+  code           Int       @unique(map: "IX_TransformerStations_Code") @default(autoincrement()) @map("Code")
+
+  meters ElectricityMeter[]
+
+  @@index([isDeleted], map: "IX_TransformerStations_IsDeleted")
+  @@map("transformerstations")
+}
