@@ -15,9 +15,16 @@ export function LogoutButton() {
   async function handleLogout() {
     setLoading(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      toast.success("Đã đăng xuất");
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) {
+        toast.success("Đã đăng xuất");
+      } else {
+        toast.error("Đăng xuất chưa hoàn tất, vui lòng thử lại");
+      }
+    } catch {
+      toast.error("Không thể kết nối máy chủ, vui lòng thử lại");
     } finally {
+      setLoading(false);
       router.replace("/login");
       router.refresh();
     }

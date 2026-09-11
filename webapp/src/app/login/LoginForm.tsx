@@ -32,7 +32,9 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
         return;
       }
       toast.success("Đăng nhập thành công");
-      router.replace(redirectTo && redirectTo.startsWith("/") ? redirectTo : "/customers");
+      // Chỉ chấp nhận redirect nội bộ dạng "/path"; chặn "//host" (scheme-relative) để tránh open-redirect.
+      const isSafeRedirect = !!redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//");
+      router.replace(isSafeRedirect ? redirectTo : "/customers");
       router.refresh();
     } catch {
       setError("Không thể kết nối máy chủ, vui lòng thử lại");

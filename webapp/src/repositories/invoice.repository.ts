@@ -243,11 +243,18 @@ export class InvoiceRepository implements IInvoiceRepository {
         });
 
         const skippedNoMeters: GenerateInvoicesResult["skippedNoMeters"] = [];
+        const skippedInvalidMeters: GenerateInvoicesResult["skippedInvalidMeters"] = [];
         let created = 0;
 
         for (const customer of customers) {
           if (customer.meters.length === 0) {
             skippedNoMeters.push({ customerId: customer.id, customerName: customer.name });
+            continue;
+          }
+
+          // Phòng thủ sâu: không tin tưởng tuyệt đối dữ liệu đồng hồ đã lưu, chặn sản lượng âm trước khi tạo hóa đơn.
+          if (customer.meters.some((m) => m.endNum < m.startNum)) {
+            skippedInvalidMeters.push({ customerId: customer.id, customerName: customer.name });
             continue;
           }
 
@@ -291,7 +298,7 @@ export class InvoiceRepository implements IInvoiceRepository {
           created += 1;
         }
 
-        return { created, skippedNoMeters };
+        return { created, skippedNoMeters, skippedInvalidMeters };
       },
       { timeout: 30_000 },
     );

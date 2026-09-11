@@ -3,7 +3,8 @@ import { verifySessionToken } from "@/lib/auth/jwt";
 import { SESSION_COOKIE_NAME } from "@/lib/auth/session";
 
 const PUBLIC_PAGE_PATHS = ["/login"];
-const PUBLIC_API_PATHS = ["/api/auth/login"];
+// /api/auth/logout phải luôn xử lý được kể cả khi session đã hết hạn/không hợp lệ, để cookie chắc chắn bị xóa.
+const PUBLIC_API_PATHS = ["/api/auth/login", "/api/auth/logout"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

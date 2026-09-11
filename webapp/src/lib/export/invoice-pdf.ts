@@ -48,12 +48,12 @@ function buildInvoiceContent(
 
   const tableBody = [
     [
-      { text: "Tên ĐH", bold: true, fontSize: 13 },
-      { text: "Trạm", bold: true, fontSize: 13 },
-      { text: "Số Mới", bold: true, fontSize: 13 },
-      { text: "Số Cũ", bold: true, fontSize: 13 },
-      { text: "Điện Năng TT", bold: true, fontSize: 13 },
-      { text: "Thành Tiền", bold: true, fontSize: 13 },
+      { text: "Tên ĐH", bold: true, fontSize: 11 },
+      { text: "Trạm", bold: true, fontSize: 11 },
+      { text: "Số Mới", bold: true, fontSize: 11 },
+      { text: "Số Cũ", bold: true, fontSize: 11 },
+      { text: "Điện Năng TT", bold: true, fontSize: 11 },
+      { text: "Thành Tiền", bold: true, fontSize: 11 },
     ],
     ...(invoice.details ?? []).map((d) => [
       { text: d.electricityMeterName, alignment: "center" as const },
@@ -99,14 +99,13 @@ function buildInvoiceContent(
     },
     { text: `Giá Điện: ${formatNumber(unitPrice)} đồng/kWh`, bold: true, fontSize: 13, margin: [0, 0, 0, 16] },
     {
-      // 2 cột đầu (Tên ĐH/Trạm) dùng "*" để tự co giãn lấp đầy phần rộng còn lại — tận dụng cơ chế
-      // chia đều width có sẵn của pdfmake (luôn đúng bằng bề rộng khả dụng thực tế, không cần tự
-      // tính tay dễ sai số) — 4 cột số liệu còn lại đặt width cố định đủ rộng để tiêu đề KHÔNG bị
-      // xuống dòng (lỗi cũ: "auto" tự co theo nội dung khiến "Số Mới"/"Điện Năng TT" bị dồn hẹp,
-      // 2 bên trông lệch nhau rõ rệt so với 2 cột "*" bên trái).
+      // 1 cột "*" (Tên ĐH) hấp thụ hết bề rộng còn thừa — các cột còn lại đặt width cố định vừa đủ
+      // để không cột nào bị xuống dòng (Trạm/Số Mới/Số Cũ/Thành Tiền ngắn, "Điện Năng TT" cần rộng
+      // hơn hẳn vì là nhãn dài nhất). Cỡ chữ + padding giảm so với bản trước (đang to/nặng hơn cần
+      // thiết) để bảng trông cân đối, gọn gàng hơn mà vẫn đủ rõ để đọc.
       table: {
         headerRows: 1,
-        widths: ["*", "*", 48, 48, 65, 78],
+        widths: ["*", 50, 40, 40, 90, 65],
         body: tableBody,
       },
       layout: {
@@ -114,12 +113,12 @@ function buildInvoiceContent(
         vLineWidth: () => 1,
         hLineColor: () => "black",
         vLineColor: () => "black",
-        paddingLeft: () => 8,
-        paddingRight: () => 8,
-        paddingTop: () => 6,
-        paddingBottom: () => 6,
+        paddingLeft: () => 6,
+        paddingRight: () => 6,
+        paddingTop: () => 5,
+        paddingBottom: () => 5,
       },
-      fontSize: 13,
+      fontSize: 11,
       margin: [0, 0, 0, 20],
     },
     {

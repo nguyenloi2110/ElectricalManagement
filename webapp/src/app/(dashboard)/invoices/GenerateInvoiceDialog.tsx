@@ -70,9 +70,13 @@ export function GenerateInvoiceDialog({ customerIds, onClose, onGenerated }: Gen
         return;
       }
       const skipped = (json.data.skippedNoMeters ?? []) as Array<{ customerName: string }>;
+      const skippedInvalid = (json.data.skippedInvalidMeters ?? []) as Array<{ customerName: string }>;
       toast.success(`Đã tạo ${json.data.created} hóa đơn tháng ${month}`);
       if (skipped.length > 0) {
         toast.warning(`Bỏ qua ${skipped.length} khách hàng chưa có đồng hồ điện`);
+      }
+      if (skippedInvalid.length > 0) {
+        toast.warning(`Bỏ qua ${skippedInvalid.length} khách hàng có chỉ số đồng hồ không hợp lệ (Chỉ số cuối < Chỉ số đầu)`);
       }
       onGenerated();
     } catch {

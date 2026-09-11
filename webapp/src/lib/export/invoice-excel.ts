@@ -37,14 +37,6 @@ export async function buildInvoiceExcelWorkbook(invoices: InvoiceEntity[]): Prom
     { header: "Ngày tạo", key: "createdAt", width: 18 },
   ];
 
-  const headerRow = sheet.getRow(1);
-  headerRow.eachCell((cell) => {
-    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, name: "Calibri", size: 11 };
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2563EB" } };
-    cell.alignment = { vertical: "middle", horizontal: "center" };
-  });
-  headerRow.height = 22;
-
   invoices.forEach((inv, index) => {
     sheet.addRow({
       stt: index + 1,
@@ -67,6 +59,17 @@ export async function buildInvoiceExcelWorkbook(invoices: InvoiceEntity[]): Prom
   sheet.getColumn("stt").alignment = { horizontal: "center" };
   sheet.getColumn("month").alignment = { horizontal: "center" };
   sheet.getColumn("status").alignment = { horizontal: "center" };
+
+  // Style header LAST — ExcelJS's `column.xxx = value` setters overwrite that property
+  // on every existing cell in the column (including row 1), so applying header style
+  // before the column-level numFmt/alignment above caused inconsistent header formatting.
+  const headerRow = sheet.getRow(1);
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, name: "Calibri", size: 11 };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2563EB" } };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+  });
+  headerRow.height = 22;
 
   for (let r = 1; r <= invoices.length + 1; r++) {
     sheet.getRow(r).eachCell({ includeEmpty: true }, (cell) => {

@@ -35,6 +35,8 @@ export interface GenerateInvoicesInput {
 export interface GenerateInvoicesResult {
   created: number;
   skippedNoMeters: Array<{ customerId: string; customerName: string }>;
+  /** Khách hàng bị bỏ qua vì có đồng hồ với Chỉ số cuối < Chỉ số đầu (bảo vệ tại thời điểm phát sinh, không chỉ khi lưu đồng hồ). */
+  skippedInvalidMeters: Array<{ customerId: string; customerName: string }>;
 }
 
 export interface ExistingInvoiceCustomer {

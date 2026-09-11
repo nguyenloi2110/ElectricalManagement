@@ -20,6 +20,9 @@ function buildAdapter() {
     password: decodeURIComponent(url.password),
     database: url.pathname.replace(/^\//, ""),
     connectionLimit: 10,
+    // MySQL 8's default caching_sha2_password plugin needs this without TLS, otherwise
+    // the handshake silently fails and Prisma's pool just times out waiting for a connection.
+    allowPublicKeyRetrieval: true,
   });
 }
 

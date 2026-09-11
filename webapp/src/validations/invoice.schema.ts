@@ -12,7 +12,7 @@ export const batchDeleteInvoicesSchema = z.object({
 
 export const generateInvoicesSchema = z.object({
   customerIds: z.array(z.string().trim().min(1)).min(1, "Vui lòng chọn ít nhất 1 khách hàng"),
-  month: z.string().regex(/^\d{4}-\d{2}$/, "Tháng phải theo định dạng yyyy-MM"),
+  month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Tháng phải theo định dạng yyyy-MM hợp lệ"),
   unitPrice: z.coerce.number().min(0, "Giá điện không được âm").optional(),
   useDefaultPrice: z.boolean().default(true),
   confirmOverwrite: z.boolean().default(false),
